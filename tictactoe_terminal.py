@@ -151,15 +151,20 @@ def clean():
 
 def minimax(board, depth, player):
     # inf/-inf are the initial score for the players
-    best = [-1, -1, inf if player == COMP else -inf]
+    best = [None, None, inf if player == COMP else -inf]
 
     if depth == 0 or game_over(board):
-        return [-1, -1, evaluate(board)]
+        return [None, None, evaluate(board)]
+        # return [None, None, evaluate(board) * ( 1 / depth if depth else 1)]
 
     for cell in empty_cells(board):
         # Fill the empty cells with the player symbols
         x, y = cell[0], cell[1]
         board[x][y] = player
+        if evaluate(board) == COMP:
+            best = [ x, y, COMP]
+            board[x][y] = 0
+            break
         score = minimax(board, depth - 1, -player)
         board[x][y] = 0
         score[0], score[1] = x, y
@@ -169,6 +174,43 @@ def minimax(board, depth, player):
                 best = score
         elif score[2] > best[2]:
             best = score
+
+    return best
+
+def minimaxWithAB(board, depth, player, alpha = -inf, beta = inf):
+    # inf/-inf are the initial score for the players
+    best = [None, None, inf if player == COMP else -inf]
+
+    if depth == 0 or game_over(board):
+        return [None, None, evaluate(board)]
+        # return [None, None, evaluate(board) * ( 1 / depth if depth else 1)]
+
+    for cell in empty_cells(board):
+        # Fill the empty cells with the player symbols
+        x, y = cell[0], cell[1]
+        board[x][y] = player
+        if evaluate(board) == COMP:
+            best = [ x, y, COMP]
+            board[x][y] = 0
+            break
+        score = minimaxWithAB(board, depth - 1, -player, alpha, beta)
+        board[x][y] = 0
+        score[0], score[1] = x, y
+
+        if player == COMP:
+            if score[2] < best[2]:
+                best = score
+            if best[2] <= alpha:
+                return best
+            if best[2] < beta:
+                beta = best[2]
+        else:
+            if score[2] > best[2]:
+                best = score
+            if best[2] >= beta:
+                return best
+            if best[2] > alpha:
+                alpha = best[2]
 
     return best
 
@@ -226,7 +268,7 @@ def ai_turn(board):
     depth = len(empty_cells(board))  # The remaining of empty cells
     # print(empty_cells(board))
     # the optimal move for computer
-    row, col, score = minimax(board, depth, COMP)
+    row, col, score = minimaxWithAB(board, depth, COMP)
     # print(row, col, score)
     board[row][col] = COMP
     print(render(board))  # Show result board
