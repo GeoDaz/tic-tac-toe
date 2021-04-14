@@ -310,7 +310,9 @@ def main():
         human_turn(board)
         if len(empty_cells(board)) == 0 or wins(board, HUMAN):
             break
+        start_time = time.time()
         ai_turn(board)
+        print("--- %s seconds ---" % (time.time() - start_time))
 
     if wins(board, COMP):
         print("AI wins")
