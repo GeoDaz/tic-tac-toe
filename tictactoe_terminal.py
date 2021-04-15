@@ -191,10 +191,13 @@ def minimaxWithAB(board, depth, player, alpha = -inf, beta = inf):
         # Fill the empty cells with the player symbols
         x, y = cell[0], cell[1]
         board[x][y] = player
+        
+        # Prevent from using defensive move when IA can win
         if evaluate(board) == COMP:
-            best = [ x, y, COMP]
+            best = [x, y, COMP]
             board[x][y] = 0
             break
+        
         score = minimaxWithAB(board, depth - 1, -player, alpha, beta)
         board[x][y] = 0
         score[0], score[1] = x, y
@@ -243,8 +246,6 @@ def human_turn(board):
             )
             coord = nb_to_coord(move, nb_cases)
             # When the player move is valid
-            # print(coord)
-            # print(remain)
             if coord in remain:
                 x, y = coord
                 board[x][y] = 1
@@ -267,13 +268,13 @@ def human_turn(board):
 
 def ai_turn(board):
     print("AI Turn: \n")
-    depth = len(empty_cells(board))  # The remaining of empty cells
-    # print(empty_cells(board))
+    # The remaining of empty cells OR max Depth
+    depth = min(len(empty_cells(board)), 7)
     # the optimal move for computer
     row, col, score = minimaxWithAB(board, depth, COMP)
-    # print(row, col, score)
     board[row][col] = COMP
-    print(render(board))  # Show result board
+    # Show result board
+    print(render(board))  
 
 
 def render(board):
