@@ -1,7 +1,7 @@
 import pygame
 import math
 from math import inf
-from modules.minimax import evaluate, normalize, wins, findBestMove, empty_cells
+from modules.minimax import evaluate, normalize, wins, empty_cells, minimaxWithAB, VOID, COMP,HUMAN
 import time
 import threading
 # Initializing Pygame
@@ -9,7 +9,7 @@ pygame.init()
 
 # Screen
 WIDTH = 500
-ROWS = 3
+ROWS = 5
 win = pygame.display.set_mode((WIDTH, WIDTH))
 pygame.display.set_caption("TicTacToe")
 
@@ -45,7 +45,7 @@ def initialize_grid():
     dis_to_cen = WIDTH // ROWS // 2
 
     # Initializing the array
-    game_array = [[None for j in range(0, ROWS)] for i in range(0, ROWS)]
+    game_array = [[VOID for j in range(0, ROWS)] for i in range(0, ROWS)]
 
     for i in range(len(game_array)):
         for j in range(len(game_array[i])):
@@ -53,7 +53,7 @@ def initialize_grid():
             y = dis_to_cen * (2 * i + 1)
 
             # Adding centre coordinates
-            game_array[i][j] = (x, y, "", True)
+            game_array[i][j] = (x, y, VOID, True)
 
     return game_array
 
@@ -74,7 +74,7 @@ def click(game_array):
             if dis < WIDTH // ROWS // 2 and can_play:
                 if x_turn:  # If it's X's turn
                     images.append((x, y, X_IMAGE))
-                    game_array[i][j] = (x, y, 'x', False)
+                    game_array[i][j] = (x, y, HUMAN, False)
                     x_turn = False
                     o_turn = True
                     thread = threading.Thread(target=alphaBetaThread, args=(game_array,))
@@ -85,16 +85,25 @@ def checkGameState(game_array):
         has_drawn(game_array)
 
 def alphaBetaThread(game_array):
-    start_time = time.time()
-    x, y = findBestMove(normalize(game_array))
-    print("--- %s seconds ---" % (time.time() - start_time))
-    iaPlayThis(game_array,x,y)
+    global movenum
+    if movenum == 0:
+        if game_array[2][2][3]:
+            iaPlayThis(game_array,2,2)
+        else:
+            iaPlayThis(game_array, 1, 1)
+    else:
+        start_time = time.time()
+        x, y, score = minimaxWithAB(normalize(game_array), True)
+        print(x,y, score)
+        print("--- %s seconds ---" % (time.time() - start_time))
+        iaPlayThis(game_array,x,y)
+    movenum += 1
 
 def iaPlayThis(game_array, row, col):
     global x_turn, o_turn
     x, y, char, can_play = game_array[row][col]
     images.append((x, y, O_IMAGE))
-    game_array[row][col] = (x,y,'o', False)
+    game_array[row][col] = (x,y,COMP, False)
     x_turn = True
     o_turn = False
     
@@ -103,8 +112,9 @@ def iaPlayThis(game_array, row, col):
 
 # Checking if someone has won
 def has_won(game_array):
-    if(wins(normalize(game_array), 'o') or wins(normalize(game_array), 'x')):
-        display_message(("o" if x_turn else "x") + " has won!")
+    normal = normalize(game_array)
+    if(wins(normal, COMP) or wins(normal, HUMAN)):
+        display_message((COMP if x_turn else HUMAN) + " has won!")
         return True
     return False
 
@@ -112,7 +122,7 @@ def has_won(game_array):
 def has_drawn(game_array):
     for i in range(len(game_array)):
         for j in range(len(game_array[i])):
-            if game_array[i][j][2] == "":
+            if game_array[i][j][2] == VOID:
                 return False
     display_message("It's a draw!")
     return True
@@ -141,7 +151,8 @@ def render():
 
 def main():
     global x_turn, o_turn, images, draw
-
+    global movenum 
+    movenum = 0
     images = []
     draw = False
 
@@ -151,7 +162,7 @@ def main():
     o_turn = False
 
     game_array = initialize_grid()
-
+    print(normalize(game_array))
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -159,7 +170,6 @@ def main():
                 break
             if event.type == pygame.MOUSEBUTTONDOWN:
                 click(game_array)
-        
         render()
 
         if has_drawn(game_array) or has_won(game_array):

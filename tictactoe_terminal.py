@@ -181,6 +181,8 @@ def minimaxWithAB(board, depth, player, alpha = -inf, beta = inf):
     # inf/-inf are the initial score for the players
     best = [None, None, inf if player == COMP else -inf]
 
+    print(player, evaluate(board))
+
     if depth == 0 or game_over(board):
         return [None, None, evaluate(board)]
         # return [None, None, evaluate(board) * ( 1 / depth if depth else 1)]

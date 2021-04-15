@@ -1,14 +1,20 @@
 from math import inf
-COMP = -1
-HUMAN = 1
-VOID = ''
+import numpy as np
 
-def evaluate(board):
-    if wins(board, "o"):
-        return 150
-    if wins(board, "x"):
-        return -150
-    return 0
+COMP = "o"
+HUMAN = "x"
+VOID = ""
+SCORE = 50
+
+def evaluate(board, player):
+    if len(board) == 3:
+        if wins(board, COMP):
+            return 250
+        if wins(board, HUMAN):
+            return -250
+        return 0
+    else :
+        return boardScore(board, player)
 
 
 def empty_cells(board):
@@ -16,65 +22,83 @@ def empty_cells(board):
 
     for i, row in enumerate(board):
         for j, col in enumerate(row):
-            if board[i][j] == '':
+            if board[i][j] == VOID:
                 cells.append((i, j))
-
     return cells
 
 
-def win_row(board, player, nb_win_case):
-    for row in board:
-        isRow = 0
-        for col in row:
-            if col == player:
-                isRow += 1
-                if isRow == nb_win_case:
-                    return True
-            elif isRow:
-                isRow = 0
-    return False
+def getDiagonalsOfBoard(b):
+    diagArray = []
+    npArr = np.array(b)
+    diagArray += getDiagonalsRight(npArr)
+    npArr = np.fliplr(npArr)
+    diagArray += getDiagonalsRight(npArr)
+    return diagArray
+    
 
+def getDiagonalsRight(arr):
+    diags = []
+    newArr = arr
+    diags.append(np.diagonal(newArr))
+    newArr = np.delete(newArr, 0,0)
+    diags.append(np.diagonal(newArr))
+    flipped = np.transpose(arr)
+    newArr = np.delete(flipped, 0,0)
+    diags.append(np.diagonal(newArr))
 
-def win_col(board, player, nb_win_case):
-    isCol = [0 for _ in range(0, len(board))]
-    for row in board:
-        for y, col in enumerate(row):
-            if col == player:
-                isCol[y] += 1
-                if isCol[y] == nb_win_case:
-                    return True
-            elif isCol[y]:
-                isCol[y] = 0
+    return diags
 
-    return False
+def checkTripleAndTwoVoid(row, i, player):
+    
+    return i < len(row) - 4 and (
+        (row[i] == VOID and row[i+1] == player and row[i+2] == player and row[i+3] == player and row[i+4] == VOID) \
+    )
 
+def getScoreOfRow(row, player):
+    score = 0
+    for i in range (0, len(row)-3):
+        countVoid = 0
+        countPlayer = 0
+        for el in row[i : i+4]:
+            if el == VOID:
+                countVoid += 1
+            elif el == player:
+                countPlayer +=1
+        if countPlayer == 4: return 5*SCORE
+        if checkTripleAndTwoVoid(row, i, player): score = max(score, 4*SCORE)
+        if countPlayer == 3 and countVoid == 1: score = max(score, 3*SCORE)
+        if countPlayer == 2 and countVoid == 2: score = max(score, 2*SCORE)
+    return score
 
-def win_diag(board, player, nb_win_case):
-    for x, row in enumerate(board):
-        if x + nb_win_case > len(board):
-            break
-        for y, col in enumerate(row):
-            if col == player:
-                isDiagL = 0
-                isDiagR = 0
-                for i in range(0, nb_win_case):
-                    if y + i < len(board) and board[x+i][y+i] == player:
-                        isDiagL += 1
-                    if y >= i and board[x+i][y-i] == player:
-                        isDiagR += 1
+def boardScore(board, player, nb_win_case: int = 4):
+    if nb_win_case > len(board):
+        nb_win_case = len(board)
+    
+    multiplier = 1 if player == COMP else -1
 
-                if isDiagL == nb_win_case or isDiagR == nb_win_case:
-                    return True
+    score = 0
+    
+    # SCORE 250 PERFECT
+    for i in range(0, len(board)):
+        score = max(score, getScoreOfRow(board[i], player))
+        if score == 5*SCORE: return 5*SCORE*multiplier
+    
+    columns = np.array(board).transpose()
+    for i in range(0, len(columns)):
+        score = max(score, getScoreOfRow(columns[i], player))
+        if score == 5*SCORE: return 5*SCORE*multiplier
+    
+    diags = getDiagonalsOfBoard(board)
+    for i in range(0, len(diags)):
+        score = max(score, getScoreOfRow(diags[i], player))
+        if score == 5*SCORE: return 5*SCORE*multiplier
+    
+    return score*multiplier
 
 
 def wins(board, player, nb_win_case: int = 4):
     if nb_win_case > len(board):
         nb_win_case = len(board)
-
-    # version splitté en plusieurs fonction mais moins optimisé
-    # return win_row(board, player, nb_win_case) \
-    #     or win_col(board, player, nb_win_case) \
-    #     or win_diag(board, player, nb_win_case)
 
     isCol = []
     for x, row in enumerate(board):
@@ -115,54 +139,43 @@ def wins(board, player, nb_win_case: int = 4):
 
     return False
 
-
-def alphaBeta(b, depth, isMax, alpha, beta):
-    best = -1000 if isMax else 1000
-    score = evaluate(b)
-
-    if score == 150:
-        return score - depth
-    if score == -150:
-        return score + depth
-    if len(empty_cells(b)) == 0:
-        return score
+# b, len(empty_cells(b)), 
+def minimaxWithAB(board, isMax, depth=0, alpha = -inf, beta = inf):
+    best = [None, None, -inf if isMax else inf]
+    player = COMP if isMax else HUMAN
+    evaluation = evaluate(board, player)
     
-    for cell in empty_cells(b):
-        x, y = cell
-        b[x][y]="o" if isMax else "x"
-        
-        if isMax:
-            best = max(best, alphaBeta(b, depth+1, not isMax, alpha, beta))
-            alpha = max(alpha, best)
-            b[x][y]=""
-            if best >= beta:
-                return best
-        else:
-            best = min(best, alphaBeta(b, depth+1, not isMax, alpha, beta))
-            beta = min(best, beta)
-            b[x][y]=""
-            if best <= alpha:
-                return best
-    return best
+    if evaluation == 5*SCORE:
+        return [None, None, evaluation - depth]
+    if evaluation == -5*SCORE:
+        return [None, None, evaluation + depth]
+    if len(empty_cells(board)) == 0:
+        return [None, None, evaluation]
+    if depth == 7:
+        return [None, None, evaluation]
 
-
-def findBestMove(b):
-    bestVal = -inf
-    bestMove = (-1,-1)
-
-    for cell in empty_cells(b):
+    for cell in empty_cells(board):
         x, y = cell[0], cell[1]
-        b[x][y] = "o"
+        board[x][y] = COMP if isMax else HUMAN
+        score = minimaxWithAB(board, not isMax, depth + 1, alpha, beta)
+        board[x][y] = VOID
+        score[0], score[1] = x, y
 
-        moveVal = alphaBeta(b, 0, False, -1000, 1000)
-
-        b[x][y] = ""
-
-        if moveVal > bestVal:
-            bestMove = (x,y)
-            bestVal = moveVal
-
-    return bestMove
+        if not isMax:
+            if score[2] < best[2]:
+                best = score
+            if best[2] <= alpha:
+                return best
+            if best[2] < beta:
+                beta = best[2]
+        else:
+            if score[2] > best[2]:
+                best = score
+            if best[2] >= beta:
+                return best
+            if best[2] > alpha:
+                alpha = best[2]
+    return best
 
 
 # specific funtion
