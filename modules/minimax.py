@@ -142,19 +142,19 @@ def wins(board, player, nb_win_case: int = 4):
 
 # b, len(empty_cells(b)), 
 def minimaxWithAB(board, isMax, depth, alpha = -inf, beta = inf):
-    # alpha_org = alpha
-    # # Transpostion tabel look up
-    # if str(board) in TRANSPOSITION_TABLE:
-    #     tt_entry = TRANSPOSITION_TABLE[str(board)]
-    #     print(board, tt_entry)
-    #     if tt_entry[1] == 'EXACT':
-    #         return tt_entry[0]
-    #     elif tt_entry[1] == 'LOWERCASE':
-    #         alpha = max(alpha, tt_entry[0][1])
-    #     elif tt_entry[1] == 'UPPERCASE':
-    #         beta = min(beta, tt_entry[0][1])
-    #     if alpha >= beta:
-    #         return tt_entry[0]
+    alpha_org = alpha
+    # Transpostion tabel look up
+    if str(board) in TRANSPOSITION_TABLE:
+        tt_entry = TRANSPOSITION_TABLE[str(board)]
+        if tt_entry[1] == 'LOWERCASE':
+            if tt_entry[0][2] >= beta: return tt_entry[0]
+            alpha = max(alpha, tt_entry[0][2])
+        if tt_entry[1] == 'UPPERCASE':
+            if tt_entry[0][2] <= alpha: return tt_entry[0]
+            beta = min(beta, tt_entry[0][2])
+        if tt_entry[1] == 'EXACT':
+            return tt_entry[0]
+        
 
     best = [None, None, -inf if isMax else inf]
     player = COMP if isMax else HUMAN

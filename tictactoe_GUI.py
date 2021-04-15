@@ -94,7 +94,6 @@ def alphaBetaThread(game_array):
     # else:
     start_time = time.time()
     normalizedGame = normalize(game_array)
-    TRANSPOSITION_TABLE = {}
     x, y, score = minimaxWithAB(normalizedGame, True, min(5 ,len(empty_cells(normalizedGame))))
     print(x,y, score)
     print("--- %s seconds ---" % (time.time() - start_time))
