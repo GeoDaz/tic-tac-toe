@@ -26,7 +26,6 @@ class TicTacToe:
             return HUMAN
         return VOID
 
-
     def empty_cells(self):
         """Extract the remainder of board"""
         cells = []  # it contains all empty cells
@@ -156,45 +155,20 @@ class TicTacToe:
 
         return best
 
-    def nb_to_coord(self,move: int):
-        for i in range(0, self.__nb_cases):
-            for j in range(0, self.__nb_cases):
-                if move == ((i * self.__nb_cases) + j + 1):
-                    return i, j
-        return None
-
-
-    def human_turn(self):
+    def human_turn(self, cord_case):
         remain = self.empty_cells()
-        isTurn = True
         print("Your Turn")
-        while isTurn:
-            try:
-                move = int(
-                    input(f"Enter your move (1-{self.__nb_cases * self.__nb_cases}) :")
-                )
-                coord = self.nb_to_coord(move)
-                # When the player move is valid
-                # print(coord)
-                # print(remain)
-                if coord in remain:
-                    x, y = coord
-                    self.__board[x][y] = 1
-                    isTurn = False
-                else:
-                    print("This case is full, try again.")
+        if cord_case in remain:
+            x, y = cord_case
+            self.__board[x][y] = 1
+        else:
+            print("This case is full, try again.")
 
-            # When the player mistype
-            except ValueError:
-                print(
-                    f"Wrong input, please enter (1-{self.__nb_cases * self.__nb_cases})"
-                )
 
         # While-else loop, this code below will run after successful loop.
-        else:
-            # Clean the terminal, and show the current board
-            # clean()
-            print(self.render())
+        # Clean the terminal, and show the current board
+        # clean()
+        print(self.render())
 
 
     def ai_turn(self):
@@ -206,6 +180,7 @@ class TicTacToe:
         # print(row, col, score)
         self.__board[row][col] = COMP
         print(self.render())  # Show result board
+        return (row, col)
 
 
     def render(self):
