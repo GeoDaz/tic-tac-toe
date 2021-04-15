@@ -5,6 +5,7 @@ COMP = "o"
 HUMAN = "x"
 VOID = ""
 SCORE = 50
+TRANSPOSITION_TABLE = {}
 
 def evaluate(board, player):
     if len(board) == 3:
@@ -65,7 +66,7 @@ def getScoreOfRow(row, player):
             elif el == player:
                 countPlayer +=1
         if countPlayer == 4: return 5*SCORE
-        if checkTripleAndTwoVoid(row, i, player): score = max(score, 4*SCORE)
+        if checkTripleAndTwoVoid(row, i, player): return 4*SCORE
         if countPlayer == 3 and countVoid == 1: score = max(score, 3*SCORE)
         if countPlayer == 2 and countVoid == 2: score = max(score, 2*SCORE)
     return score
@@ -140,42 +141,64 @@ def wins(board, player, nb_win_case: int = 4):
     return False
 
 # b, len(empty_cells(b)), 
-def minimaxWithAB(board, isMax, depth=0, alpha = -inf, beta = inf):
+def minimaxWithAB(board, isMax, depth, alpha = -inf, beta = inf):
+    # alpha_org = alpha
+    # # Transpostion tabel look up
+    # if str(board) in TRANSPOSITION_TABLE:
+    #     tt_entry = TRANSPOSITION_TABLE[str(board)]
+    #     print(board, tt_entry)
+    #     if tt_entry[1] == 'EXACT':
+    #         return tt_entry[0]
+    #     elif tt_entry[1] == 'LOWERCASE':
+    #         alpha = max(alpha, tt_entry[0][1])
+    #     elif tt_entry[1] == 'UPPERCASE':
+    #         beta = min(beta, tt_entry[0][1])
+    #     if alpha >= beta:
+    #         return tt_entry[0]
+
     best = [None, None, -inf if isMax else inf]
     player = COMP if isMax else HUMAN
     evaluation = evaluate(board, player)
-    
-    if evaluation == 5*SCORE:
-        return [None, None, evaluation - depth]
-    if evaluation == -5*SCORE:
-        return [None, None, evaluation + depth]
-    if len(empty_cells(board)) == 0:
+
+    if depth == 0 or len(empty_cells(board)) == 0:
         return [None, None, evaluation]
-    if depth == 7:
-        return [None, None, evaluation]
+    if evaluation == 5*SCORE or evaluation == -5*SCORE or evaluation == -4*SCORE or evaluation == -4*SCORE:
+        return [None, None, evaluation ]
 
     for cell in empty_cells(board):
         x, y = cell[0], cell[1]
         board[x][y] = COMP if isMax else HUMAN
-        score = minimaxWithAB(board, not isMax, depth + 1, alpha, beta)
+        score = minimaxWithAB(board, not isMax, depth - 1, alpha, beta)
         board[x][y] = VOID
         score[0], score[1] = x, y
 
         if not isMax:
             if score[2] < best[2]:
                 best = score
-            if best[2] <= alpha:
-                return best
             if best[2] < beta:
                 beta = best[2]
+            if beta <= alpha:
+                break
         else:
             if score[2] > best[2]:
                 best = score
-            if best[2] >= beta:
-                return best
             if best[2] > alpha:
                 alpha = best[2]
+            if alpha >= beta:
+                break
+  
+    store(TRANSPOSITION_TABLE, board, alpha, beta, best)
     return best
+
+def store(table, board, alpha, beta, best):
+    if best[2] <= alpha:
+        flag = 'UPPERCASE'
+    elif best[2] >= beta:
+        flag = 'LOWERCASE'
+    else:
+        flag = 'EXACT'
+
+    table[str(board)] = [best, flag]
 
 
 # specific funtion

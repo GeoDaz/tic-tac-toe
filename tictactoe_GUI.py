@@ -1,7 +1,7 @@
 import pygame
 import math
 from math import inf
-from modules.minimax import evaluate, normalize, wins, empty_cells, minimaxWithAB, VOID, COMP,HUMAN
+from modules.minimax import *
 import time
 import threading
 # Initializing Pygame
@@ -86,17 +86,19 @@ def checkGameState(game_array):
 
 def alphaBetaThread(game_array):
     global movenum
-    if movenum == 0:
-        if game_array[2][2][3]:
-            iaPlayThis(game_array,2,2)
-        else:
-            iaPlayThis(game_array, 1, 1)
-    else:
-        start_time = time.time()
-        x, y, score = minimaxWithAB(normalize(game_array), True)
-        print(x,y, score)
-        print("--- %s seconds ---" % (time.time() - start_time))
-        iaPlayThis(game_array,x,y)
+    # if movenum == 0 and len(game_array) > 3:
+    #     if game_array[2][2][3]:
+    #         iaPlayThis(game_array,2,2)
+    #     else:
+    #         iaPlayThis(game_array, 1, 1)
+    # else:
+    start_time = time.time()
+    normalizedGame = normalize(game_array)
+    TRANSPOSITION_TABLE = {}
+    x, y, score = minimaxWithAB(normalizedGame, True, min(5 ,len(empty_cells(normalizedGame))))
+    print(x,y, score)
+    print("--- %s seconds ---" % (time.time() - start_time))
+    iaPlayThis(game_array,x,y)
     movenum += 1
 
 def iaPlayThis(game_array, row, col):
@@ -106,8 +108,6 @@ def iaPlayThis(game_array, row, col):
     game_array[row][col] = (x,y,COMP, False)
     x_turn = True
     o_turn = False
-    
-    
         
 
 # Checking if someone has won
@@ -162,7 +162,6 @@ def main():
     o_turn = False
 
     game_array = initialize_grid()
-    print(normalize(game_array))
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
