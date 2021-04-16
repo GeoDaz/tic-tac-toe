@@ -1,5 +1,6 @@
 from tkinter import * 
 from tkinter.font import Font
+from tkinter.ttk import Combobox
 from TicTacToe import TicTacToe
 import sys
 import os
@@ -8,6 +9,7 @@ from TicTacToe import TicTacToe, HUMAN, COMP, LEGEND
 from threading import Thread
 
 btn_dict = {}
+others_btn = {}
 label = None
 
 
@@ -35,11 +37,9 @@ def play(case, tictactoe, string_var):
             end_game()
             string_var.set("You win !")
         else:
+            string_var.set("AI's turn...")
             thread = Thread(target=ai_turn_gui,args=(tictactoe,string_var,))
             thread.start()
-
-        
-
 
 
 def ai_turn_gui(tictactoe,string_var):
@@ -59,6 +59,8 @@ def ai_turn_gui(tictactoe,string_var):
         if tictactoe.wins(COMP):
             end_game()
             string_var.set("IA wins !")
+        else:
+            string_var.set("It's your turn !")
     else:
         end_game()
         string_var.set("It's a Draw. No one wins...")
@@ -73,46 +75,62 @@ def create_board(nb_cases, window, tictactoe, string_var):
             btn.grid(row=cord_x+1,column=cord_y)
             btn_dict[cord_y][cord_x] = btn
 
-def restart(nb_cases, window, tictactoe, string_var):
+def restart(nb_cases, window, string_var):
     for row in btn_dict:
         for col in btn_dict[row]:
             btn_dict[row][col].destroy()
+    others_btn['restart'].destroy()
+    others_btn['quit'].destroy()
+    
+    string_var.set('')
+    define_grid(window, string_var)
+
+def create_grid(event, window, string_var, grid_msg, grid_cb):
+    nb_cases = int(grid_cb.get())
+    grid_msg.destroy()
+    grid_cb.destroy()
     tictactoe = TicTacToe(nb_cases)
+
+    string_var.set("Let's play !")
     create_board(nb_cases, window, tictactoe, string_var)
-    string_var.set("Welcome ! Let's play !")
+
+    
+    others_btn['restart'] = Button(window,text="Restart",width=10,command=lambda: restart(nb_cases, window, string_var))
+    others_btn['restart'].grid(row=len(btn_dict)+2,column=0)
+    others_btn['quit'] = Button(window,text="Quit",width=10,command=window.quit)
+    others_btn['quit'].grid(row=len(btn_dict)+2,column=nb_cases-1)
+
+
+def define_grid(window, string_var):
+    grid_msg = Label(text="Please, choose the number of cases :")
+    grid_msg.grid(row=1,column=0)
+
+    # define default value for combobox
+    dim_select = StringVar()
+    # dim_select.set(3)
+
+    # create combobox
+    grid_cb = Combobox(window, textvariable=dim_select)
+    grid_cb['values'] = (3, 5, 7)
+    grid_cb['state'] = 'readonly'  # normal
+    grid_cb.grid(row=1,column=1)
+
+    grid_cb.bind('<<ComboboxSelected>>', lambda e: create_grid(e, window, string_var, grid_msg, grid_cb))
 
 def main():
-    # Setting game
-    print(
-        "\nWelcome to Tic Tac Toe.\n"
-        "Play against our IA.\n"
-    )
-    clean()
-
-    nb_cases_ok = False
-    while not nb_cases_ok:
-        try:
-            nb_cases = int(input("Choose the number of cases :"))
-            nb_cases_ok = True
-        except ValueError:
-            print("You should write a number")
-
-    tictactoe = TicTacToe(nb_cases)
-    print(tictactoe.render(), end="\n")
-    print("Game is ready !\n")
-
     # Open window
     window = Tk()
     window.title("Tic Tac Toe")
+
+    string_var = StringVar()
+    string_var.set("Welcome !")
+    welcome = Label(window,textvariable=string_var).grid(row=0,columnspan=2)
+
+    define_grid(window, string_var)
+
     
-    string_var=StringVar()
-    string_var.set("Welcome ! Let's play !")
-    create_board(nb_cases, window, tictactoe, string_var)
-    Label(window,textvariable=string_var).grid(row=len(btn_dict)+1,columnspan=len(btn_dict))
 
-    Button(window,text="Restart",width=10,command=lambda: restart(nb_cases, window, tictactoe, string_var)).grid(row=len(btn_dict)+2,column=0)
-    Button(window,text="Quit",width=10,command=window.quit).grid(row=len(btn_dict)+2,column=nb_cases-1)
-
+  
     window.mainloop()
 
 
