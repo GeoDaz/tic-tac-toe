@@ -1,9 +1,11 @@
 from tkinter import * 
+from tkinter.font import Font
 from TicTacToe import TicTacToe
 import sys
 import os
 import time
 from TicTacToe import TicTacToe, HUMAN, COMP, LEGEND
+from threading import Thread
 
 btn_dict = {}
 label = None
@@ -23,37 +25,51 @@ def end_game():
             btn_dict[row][col]["state"] = 'disabled'
 
 def play(case, tictactoe, string_var):
-    if len(tictactoe.empty_cells()) > 0 and not tictactoe.game_over():
+    if len(tictactoe.empty_cells()) > 0 and not tictactoe.game_over() and tictactoe.turn == HUMAN:
         tictactoe.human_turn(case)
         cord_x, cord_y = case
         btn_dict[cord_y][cord_x]['text'] = "x"
-        btn_dict[cord_y][cord_x]['state'] = 'disabled'
+        btn_dict[cord_y][cord_x]['fg'] = "black"
+        #btn_dict[cord_y][cord_x]['font'] = 'Helvetica 20'
         if tictactoe.wins(HUMAN):
             end_game()
             string_var.set("You win !")
-        elif len(tictactoe.empty_cells()) > 0:
-            start_time = time.time()
-            cord_x, cord_y = tictactoe.ai_turn()
-            duration_time = time.time() - start_time
-            selected_btn = btn_dict[cord_y][cord_x]
-            # if duration_time < 10:
-            #     selected_btn.after(1000, selected_btn.config(text='o',state='disabled'))
-            # else:
-            selected_btn['state'] = 'disabled'
-            selected_btn['text'] = "o"
-            if tictactoe.wins(COMP):
-                end_game()
-                string_var.set("IA wins !")
         else:
+            thread = Thread(target=ai_turn_gui,args=(tictactoe,string_var,))
+            thread.start()
+
+        
+
+
+
+def ai_turn_gui(tictactoe,string_var):
+    print("thread started")
+    time.sleep(0.3)
+    if len(tictactoe.empty_cells()) > 0:
+        start_time = time.time()
+        cord_x, cord_y = tictactoe.ai_turn()
+        duration_time = time.time() - start_time
+        selected_btn = btn_dict[cord_y][cord_x]
+        # if duration_time < 10:
+        #     selected_btn.after(1000, selected_btn.config(text='o',state='disabled'))
+        # else:
+        selected_btn['text'] = "o"
+        #selected_btn['font'] = 'Helvetica 20'
+        selected_btn['fg'] = "black"
+        if tictactoe.wins(COMP):
             end_game()
-            string_var.set("It's a Draw. No one wins...")
+            string_var.set("IA wins !")
+    else:
+        end_game()
+        string_var.set("It's a Draw. No one wins...")
+    print("thread finished")
 
 def create_board(nb_cases, window, tictactoe, string_var):
     for cord_y in range(0, nb_cases):
         btn_dict[cord_y] = {}
         for cord_x in range(nb_cases):
             idx = cord_x * nb_cases + cord_y + 1
-            btn = Button(window,text=idx,width=10,height=5,command=lambda case=(cord_x, cord_y): play(case, tictactoe, string_var))
+            btn = Button(window,text=idx,width=10,fg='dim gray',bg='white',font=('Helvetica 15'),height=5,command=lambda case=(cord_x, cord_y): play(case, tictactoe, string_var))
             btn.grid(row=cord_x+1,column=cord_y)
             btn_dict[cord_y][cord_x] = btn
 
@@ -95,7 +111,7 @@ def main():
     Label(window,textvariable=string_var).grid(row=len(btn_dict)+1,columnspan=len(btn_dict))
 
     Button(window,text="Restart",width=10,command=lambda: restart(nb_cases, window, tictactoe, string_var)).grid(row=len(btn_dict)+2,column=0)
-    Button(window,text="Quit",width=10,command=window.quit).grid(row=len(btn_dict)+2,column=2)
+    Button(window,text="Quit",width=10,command=window.quit).grid(row=len(btn_dict)+2,column=nb_cases-1)
 
     window.mainloop()
 

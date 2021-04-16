@@ -9,6 +9,7 @@ class TicTacToe:
     def __init__(self,nb_cases):
         self.__nb_cases = nb_cases
         self.__board = self.make_board(nb_cases)
+        self.turn = HUMAN
 
     def make_board(self,nb: int = 3):
         return [[0 for j in range(0, nb)] for i in range(0, nb)]
@@ -161,14 +162,15 @@ class TicTacToe:
         if cord_case in remain:
             x, y = cord_case
             self.__board[x][y] = 1
+            self.turn = COMP
         else:
             print("This case is full, try again.")
-
+        print(self.render())
 
         # While-else loop, this code below will run after successful loop.
         # Clean the terminal, and show the current board
         # clean()
-        print(self.render())
+        
 
 
     def ai_turn(self):
@@ -180,6 +182,7 @@ class TicTacToe:
         # print(row, col, score)
         self.__board[row][col] = COMP
         print(self.render())  # Show result board
+        self.turn = HUMAN
         return (row, col)
 
 
