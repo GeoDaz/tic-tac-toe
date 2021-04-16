@@ -6,13 +6,11 @@ import threading
 import pickle
 # Initializing Pygame
 pygame.init()
-TRANSPOSITION_TABLE = {}
+
 # Screen
 WIDTH = 500
-ROWS = 7
 win = pygame.display.set_mode((WIDTH, WIDTH))
 pygame.display.set_caption("TicTacToe")
-
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -38,9 +36,9 @@ SCORE = 50
 def evaluate(board, player):
     if len(board) == 3:
         if wins(board, COMP):
-            return 250
+            return 10000
         if wins(board, HUMAN):
-            return -250
+            return -10000
         return 0
     else :
         return boardScore(board, player)
@@ -72,8 +70,6 @@ def getDiagonalsRight(arr):
     for offset in range(start,end):
         diag = [ row[i+offset] for i,row in enumerate(arr) if 0 <= i+offset < len(row)]
         diags.append(diag)
-    return diags
-
     return diags
 
 def checkTripleAndTwoVoid(row, player):
@@ -188,16 +184,17 @@ def isTerminalNode(board):
 def minimaxWithAB(board, isMax, depth, alpha = -inf, beta = inf):
     alpha_org = alpha
     # Transpostion tabel look up {"[[]][][][]": [[1,1,1], "TRASTS"]}
-    if str(board) in TRANSPOSITION_TABLE:
-        tt_entry = TRANSPOSITION_TABLE[str(board)]
-        if tt_entry[1] == 'LOWERCASE':
-            if tt_entry[0][2] >= beta: return tt_entry[0]
-            alpha = max(alpha, tt_entry[0][2])
-        if tt_entry[1] == 'UPPERCASE':
-            if tt_entry[0][2] <= alpha: return tt_entry[0]
-            beta = min(beta, tt_entry[0][2])
-        if tt_entry[1] == 'EXACT':
-            return tt_entry[0]
+    if len(board) > 3:
+        if str(board) in TRANSPOSITION_TABLE:
+            tt_entry = TRANSPOSITION_TABLE[str(board)]
+            if tt_entry[1] == 'LOWERCASE':
+                if tt_entry[0][2] >= beta: return tt_entry[0]
+                alpha = max(alpha, tt_entry[0][2])
+            if tt_entry[1] == 'UPPERCASE':
+                if tt_entry[0][2] <= alpha: return tt_entry[0]
+                beta = min(beta, tt_entry[0][2])
+            if tt_entry[1] == 'EXACT':
+                return tt_entry[0]
         
     best = [None, None, -inf if isMax else inf]
     player = COMP if isMax else HUMAN
@@ -207,9 +204,9 @@ def minimaxWithAB(board, isMax, depth, alpha = -inf, beta = inf):
     if depth == 0 or isTerminal:
         if isTerminal:
             if wins(board, COMP):
-                return [None, None, 10000 - depth]
+                return [None, None, 10000 + (depth+1)]
             elif wins(board, HUMAN):
-                return [None, None, -10000 + depth]
+                return [None, None, -10000 - depth]
             else:
                 return [None, None, 0]
         else:
@@ -238,7 +235,7 @@ def minimaxWithAB(board, isMax, depth, alpha = -inf, beta = inf):
             if alpha >= beta:
                 break
   
-    store(TRANSPOSITION_TABLE, board, alpha, beta, best)
+    if len(board) > 3 :store(TRANSPOSITION_TABLE, board, alpha, beta, best)
     return best
 
 def store(table, board, alpha, beta, best):
@@ -258,6 +255,7 @@ def normalize(board):
 ###################################
 
 def draw_grid():
+    global ROWS
     gap = WIDTH // ROWS
 
     # Starting points
@@ -271,6 +269,7 @@ def draw_grid():
 
 
 def initialize_grid():
+    global ROWS
     dis_to_cen = WIDTH // ROWS // 2
 
     # Initializing the array
@@ -318,8 +317,7 @@ def alphaBetaThread(game_array):
     start_time = time.time()
     normalizedGame = normalize(game_array)
     numEmptyCells = len(empty_cells(normalizedGame))
-    depth = 2 if len(game_array) > 3 else numEmptyCells
-    print(depth)
+    depth = 4 if len(game_array) > 3 else numEmptyCells
     x, y, score = minimaxWithAB(normalizedGame, True, min(depth, numEmptyCells))
     print(x,y, score)
     print("--- %s seconds ---" % (time.time() - start_time))
@@ -345,7 +343,6 @@ def loadStransTableFromFile():
         a_file = open("transp_table.pkl", "rb")
         tt = pickle.load(a_file)
         a_file.close()
-        print("table , ", len(tt))
         return tt
     except:
         return {}
@@ -378,29 +375,57 @@ def display_message(content):
 
 
 def render():
+    global menu
+    if not menu:
+        win.fill(WHITE)
+        draw_grid()
+        # Drawing X's and O's
+        for image in images:
+            x, y, IMAGE = image
+            win.blit(IMAGE, (x - IMAGE.get_width() // 2, y - IMAGE.get_height() // 2))
+    else:
+        win.fill(WHITE)
+        draw_menu()
+    pygame.display.update()
+
+def draw_menu():
+    x = 0
+    y = 0
+    w1, h1 = 140,40
+    x1,y1 = (WIDTH/2)-w1/2 , (WIDTH/2)-h1/2
+    x2, y2 = (WIDTH/2)-w1/2 , (WIDTH/2 -100)-h1/2
+    x3, y3 = (WIDTH/2)-w1/2 , (WIDTH/2 +100)-h1/2
+    smallfont = pygame.font.SysFont('Corbel',35)
+    text1 = smallfont.render('3x3' , True , BLACK)
+    text2 = smallfont.render('5x5' , True , BLACK)
+    text3 = smallfont.render('7x7' , True , BLACK)
+    
+    pygame.draw.rect(win,(255,0,0),[x1,y1,140,40])
+    pygame.draw.rect(win,(255,0,0),[x2,y2,140,40])
+    pygame.draw.rect(win,(255,0,0),[x3,y3,140,40])
+    win.blit(text1 , ((WIDTH/2)-20,(WIDTH/2 -100)-20))
+    win.blit(text2 , ((WIDTH/2)-20,(WIDTH/2)-20))
+    win.blit(text3 , ((WIDTH/2)-20,(WIDTH/2 +100)-20))
+
+def renderMenu():
     win.fill(WHITE)
-    draw_grid()
-
-    # Drawing X's and O's
-    for image in images:
-        x, y, IMAGE = image
-        win.blit(IMAGE, (x - IMAGE.get_width() // 2, y - IMAGE.get_height() // 2))
-
+    draw_menu()
     pygame.display.update()
 
 def main():
     global x_turn, o_turn, images, draw
-    global movenum
-
+    global movenum, menu, ROWS
+    ROWS = 3
     movenum = 0
     images = []
     draw = False
-
+    menu = True
     run = True
-
     x_turn = True
     o_turn = False
-    game_array = initialize_grid()
+    game_array = []
+
+    
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -408,11 +433,32 @@ def main():
                 pygame.quit()
                 break
             if event.type == pygame.MOUSEBUTTONDOWN:
-                click(game_array)
+                if menu:
+                    mouse = pygame.mouse.get_pos()
+                    if (WIDTH/2)-70 <= mouse[0] <= (WIDTH/2)+70 and (WIDTH/2)-20 <= mouse[1] <= (WIDTH/2)+20:
+                        print("clicked 5x5")
+                        ROWS = 5
+                        game_array = initialize_grid()
+                        menu = False
+                    elif (WIDTH/2)-70 <= mouse[0] <= (WIDTH/2)+70 and (WIDTH/2 -100)-20 <= mouse[1] <= (WIDTH/2 -100)+20:
+                        print("clicked 3x3")
+                        ROWS = 3
+                        game_array = initialize_grid()
+                        menu = False
+                    elif (WIDTH/2)-70 <= mouse[0] <= (WIDTH/2)+70 and (WIDTH/2 +100)-20 <= mouse[1] <= (WIDTH/2 +100)+20:
+                        print("clicked 7x7")
+                        ROWS = 7
+                        game_array = initialize_grid()
+                        menu = False
+                else:
+                    click(game_array)
+                    
         render()
 
-        if has_drawn(game_array) or has_won(game_array):
+        if len(game_array) > 0 and (has_drawn(game_array) or has_won(game_array)):
             run = False
+            for col in normalize(game_array):
+                print(col)
 
 TRANSPOSITION_TABLE = loadStransTableFromFile()
 
