@@ -31,8 +31,10 @@ def play(case, tictactoe, string_var):
         if not tictactoe.human_turn(case) :
             return None
         cord_x, cord_y = case
-        btn_dict[cord_y][cord_x]['text'] = HUMAN
+        btn_dict[cord_y][cord_x]['image'] = cross
         btn_dict[cord_y][cord_x]['fg'] = "black"
+        btn_dict[cord_y][cord_x]['width'] = "25px"
+        btn_dict[cord_y][cord_x]['height'] = "25px"
         #btn_dict[cord_y][cord_x]['font'] = 'Helvetica 20'
         if tictactoe.wins(HUMAN):
             end_game()
@@ -53,8 +55,10 @@ def ai_turn_gui(tictactoe, string_var):
         # if duration_time < 10:
         #     selected_btn.after(1000, selected_btn.config(text='o',state='disabled'))
         # else:
-        selected_btn['text'] = COMP
+        selected_btn['image'] = circle
         #selected_btn['font'] = 'Helvetica 20'
+        btn_dict[cord_y][cord_x]['width'] = "50px"
+        btn_dict[cord_y][cord_x]['height'] = "50px"
         selected_btn['fg'] = "black"
         if tictactoe.wins(COMP):
             end_game()
@@ -69,18 +73,12 @@ def create_board(nb_cases, window, tictactoe, string_var):
         btn_dict[cord_y] = {}
         for cord_x in range(nb_cases):
             idx = cord_x * nb_cases + cord_y + 1
-            btn = Button(
-                window, 
-                text=idx, 
-                width=10, 
-                fg='dim gray', 
-                bg='white', 
-                font=('Helvetica 15'), 
-                height=5, 
-                command=lambda case=(cord_x, cord_y): play(case, tictactoe, string_var)
-            )
-            btn.grid(row=cord_x+1, column=cord_y)
+            frames_list[idx] = (Frame(window, width = 100, height = 100))
+            frames_list[idx].propagate(False)
+            frames_list[idx].grid(row = cord_x, column = cord_y)
+            btn = Button(frames_list[idx],text=idx,fg='dim gray',bg='white',font=('Helvetica 15'),command=lambda case=(cord_x, cord_y): play(case, tictactoe, string_var))
             btn_dict[cord_y][cord_x] = btn
+            btn.pack(expand=True,fill=BOTH)
 
 
 def restart(nb_cases, window, tictactoe, string_var):
@@ -93,6 +91,7 @@ def restart(nb_cases, window, tictactoe, string_var):
 
 
 def main():
+
     # Setting game
     print(
         "\nWelcome to Tic Tac Toe.\n"
@@ -114,6 +113,13 @@ def main():
 
     # Open window
     window = Tk()
+    global circle
+    global cross
+    global frames_list
+    frames_list = {}
+    circle = PhotoImage(file = "circle.png").zoom(2).subsample(20)
+    cross = PhotoImage(file = "cross.png").zoom(2).subsample(20)
+
     window.title("Tic Tac Toe")
 
     string_var = StringVar()
