@@ -9,7 +9,7 @@ pygame.init()
 TRANSPOSITION_TABLE = {}
 # Screen
 WIDTH = 500
-ROWS = 5
+ROWS = 7
 win = pygame.display.set_mode((WIDTH, WIDTH))
 pygame.display.set_caption("TicTacToe")
 
@@ -66,14 +66,13 @@ def getDiagonalsOfBoard(b):
     
 
 def getDiagonalsRight(arr):
+    start = -(len(arr)-4)
+    end = len(arr) - 3
     diags = []
-    newArr = arr
-    diags.append(np.diagonal(newArr).tolist())
-    newArr = np.delete(newArr, 0,0)
-    diags.append(np.diagonal(newArr).tolist())
-    flipped = np.transpose(arr)
-    newArr = np.delete(flipped, 0,0)
-    diags.append(np.diagonal(newArr).tolist())
+    for offset in range(start,end):
+        diag = [ row[i+offset] for i,row in enumerate(arr) if 0 <= i+offset < len(row)]
+        diags.append(diag)
+    return diags
 
     return diags
 
@@ -267,7 +266,6 @@ def draw_grid():
 
     for i in range(ROWS):
         x = i * gap
-
         pygame.draw.line(win, GRAY, (x, 0), (x, WIDTH), ROWS)
         pygame.draw.line(win, GRAY, (0, x), (WIDTH, x), ROWS)
 
@@ -320,7 +318,7 @@ def alphaBetaThread(game_array):
     start_time = time.time()
     normalizedGame = normalize(game_array)
     numEmptyCells = len(empty_cells(normalizedGame))
-    depth = 6 if len(game_array) > 3 else numEmptyCells
+    depth = 2 if len(game_array) > 3 else numEmptyCells
     print(depth)
     x, y, score = minimaxWithAB(normalizedGame, True, min(depth, numEmptyCells))
     print(x,y, score)

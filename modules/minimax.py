@@ -37,15 +37,12 @@ def getDiagonalsOfBoard(b):
     
 
 def getDiagonalsRight(arr):
+    start = -(len(arr)-4)
+    end = len(arr) - 3
     diags = []
-    newArr = arr
-    diags.append(np.diagonal(newArr).tolist())
-    newArr = np.delete(newArr, 0,0)
-    diags.append(np.diagonal(newArr).tolist())
-    flipped = np.transpose(arr)
-    newArr = np.delete(flipped, 0,0)
-    diags.append(np.diagonal(newArr).tolist())
-
+    for offset in range(start,end):
+        diag = [ row[i+offset] for i,row in enumerate(arr) if 0 <= i+offset < len(row)]
+        diags.append(diag)
     return diags
 
 def checkTripleAndTwoVoid(row, player):
