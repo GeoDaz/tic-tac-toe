@@ -5,7 +5,6 @@ COMP = "o"
 HUMAN = "x"
 VOID = ""
 SCORE = 50
-TRANSPOSITION_TABLE = {}
 
 def evaluate(board, player):
     if len(board) == 3:
@@ -159,8 +158,9 @@ def isTerminalNode(board):
 
 # b, len(empty_cells(b)), 
 def minimaxWithAB(board, isMax, depth, alpha = -inf, beta = inf):
+    from modules.state import TRANSPOSITION_TABLE
     alpha_org = alpha
-    # Transpostion tabel look up
+    # Transpostion tabel look up {"[[]][][][]": [[1,1,1], "TRASTS"]}
     if str(board) in TRANSPOSITION_TABLE:
         tt_entry = TRANSPOSITION_TABLE[str(board)]
         if tt_entry[1] == 'LOWERCASE':
@@ -180,9 +180,9 @@ def minimaxWithAB(board, isMax, depth, alpha = -inf, beta = inf):
     if depth == 0 or isTerminal:
         if isTerminal:
             if wins(board, COMP):
-                return [None, None, 10000 + depth]
+                return [None, None, 10000 - depth]
             elif wins(board, HUMAN):
-                return [None, None, -10000 - depth]
+                return [None, None, -10000 + depth]
             else:
                 return [None, None, 0]
         else:
