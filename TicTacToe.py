@@ -158,14 +158,17 @@ class TicTacToe:
 
     def human_turn(self, cord_case):
         remain = self.empty_cells()
-        print("Your Turn")
-        if cord_case in remain:
-            x, y = cord_case
-            self.__board[x][y] = 1
-            self.turn = COMP
-        else:
+        print(cord_case, remain)
+        print("\nYour Turn")
+        if cord_case not in remain:
+            return False
             print("This case is full, try again.")
+        x, y = cord_case
+        self.__board[x][y] = HUMAN
+        self.turn = COMP
         print(self.render())
+        return True
+
 
         # While-else loop, this code below will run after successful loop.
         # Clean the terminal, and show the current board
