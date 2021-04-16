@@ -79,16 +79,15 @@ def create_board(nb_cases, window, tictactoe, string_var):
             idx = cord_x * nb_cases + cord_y + 1
             frames_list[idx] = (Frame(window, width = 100, height = 100))
             frames_list[idx].propagate(False)
-            frames_list[idx].grid(row = cord_x, column = cord_y)
+            frames_list[idx].grid(row = cord_x+1, column = cord_y)
             btn = Button(frames_list[idx],text=idx,fg='dim gray',bg='white',font=('Helvetica 15'),command=lambda case=(cord_x, cord_y): play(case, tictactoe, string_var))
             btn_dict[cord_y][cord_x] = btn
             btn.pack(expand=True,fill=BOTH)
 
 
 def restart(nb_cases, window, string_var):
-    for row in btn_dict:
-        for col in btn_dict[row]:
-            btn_dict[row][col].destroy()
+    for index in frames_list:
+        frames_list[index].destroy()
     others_btn['restart'].destroy()
     others_btn['quit'].destroy()
     
