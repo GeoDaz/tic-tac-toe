@@ -5,7 +5,7 @@ COMP = "o"
 HUMAN = "x"
 VOID = ""
 SCORE = 50
-
+TRANSPOSITION_TABLE = {}
 def evaluate(board, player):
     if len(board) == 3:
         if wins(board, COMP):
@@ -158,7 +158,6 @@ def isTerminalNode(board):
 
 # b, len(empty_cells(b)), 
 def minimaxWithAB(board, isMax, depth, alpha = -inf, beta = inf):
-    from modules.state import TRANSPOSITION_TABLE
     alpha_org = alpha
     # Transpostion tabel look up {"[[]][][][]": [[1,1,1], "TRASTS"]}
     if str(board) in TRANSPOSITION_TABLE:

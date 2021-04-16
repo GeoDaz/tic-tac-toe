@@ -6,11 +6,11 @@ PYTHONHASHSEED=20
 tab = [
     ['', '', '','',''], 
     ['', 'o', 'x','x',''], 
-    ['', '', 'x','',''], 
+    ['', 'o', 'x','',''], 
     ['', 'o', 'o','x',''], 
     ['', '', '','','']
 ]
 
 columns = np.array(tab).transpose()
 
-print(minimaxWithAB(tab, True, 6))
+print(minimaxWithAB(tab, True, 4))
