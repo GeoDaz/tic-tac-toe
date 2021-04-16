@@ -86,15 +86,9 @@ def checkGameState(game_array):
 
 def alphaBetaThread(game_array):
     global movenum
-    # if movenum == 0 and len(game_array) > 3:
-    #     if game_array[2][2][3]:
-    #         iaPlayThis(game_array,2,2)
-    #     else:
-    #         iaPlayThis(game_array, 1, 1)
-    # else:
     start_time = time.time()
     normalizedGame = normalize(game_array)
-    x, y, score = minimaxWithAB(normalizedGame, True, min(5 ,len(empty_cells(normalizedGame))))
+    x, y, score = minimaxWithAB(normalizedGame, True, min(4 ,len(empty_cells(normalizedGame))))
     print(x,y, score)
     print("--- %s seconds ---" % (time.time() - start_time))
     iaPlayThis(game_array,x,y)

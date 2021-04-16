@@ -1,4 +1,4 @@
-from modules.minimax import getDiagonalsOfBoard, VOID, boardScore, COMP, HUMAN, checkTripleAndTwoVoid, getScoreOfRow, evaluate
+from modules.minimax import *
 import numpy as np
 
 PYTHONHASHSEED=20
@@ -15,4 +15,5 @@ columns = np.array(tab).transpose()
 
 #print(tab[0],getScoreOfRow(tab[0], COMP))
 
-print(boardScore(tab, COMP))
+for t in getDiagonalsOfBoard(tab):
+    print(type(t))

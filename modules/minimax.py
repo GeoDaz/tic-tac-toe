@@ -40,61 +40,75 @@ def getDiagonalsOfBoard(b):
 def getDiagonalsRight(arr):
     diags = []
     newArr = arr
-    diags.append(np.diagonal(newArr))
+    diags.append(np.diagonal(newArr).tolist())
     newArr = np.delete(newArr, 0,0)
-    diags.append(np.diagonal(newArr))
+    diags.append(np.diagonal(newArr).tolist())
     flipped = np.transpose(arr)
     newArr = np.delete(flipped, 0,0)
-    diags.append(np.diagonal(newArr))
+    diags.append(np.diagonal(newArr).tolist())
 
     return diags
 
-def checkTripleAndTwoVoid(row, i, player):
-    
-    return i < len(row) - 4 and (
-        (row[i] == VOID and row[i+1] == player and row[i+2] == player and row[i+3] == player and row[i+4] == VOID) \
-    )
+def checkTripleAndTwoVoid(row, player):
+    playerEnemy = COMP if player == HUMAN else HUMAN
+    score = 0
+    for i in range(len(row)-4):
+        if (row[i] == VOID and row[i+1] == player and row[i+2] == player and row[i+3] == player and row[i+4] == VOID):
+            score += 30
+        
+        if (row[i] == VOID and row[i+1] == playerEnemy and row[i+2] == playerEnemy and row[i+3] == playerEnemy and row[i+4] == VOID):
+            score -= 28
+    return score
 
 def getScoreOfRow(row, player):
+    playerEnemy = COMP if player == HUMAN else HUMAN
     score = 0
-    for i in range (0, len(row)-3):
-        countVoid = 0
-        countPlayer = 0
-        for el in row[i : i+4]:
-            if el == VOID:
-                countVoid += 1
-            elif el == player:
-                countPlayer +=1
-        if countPlayer == 4: return 5*SCORE
-        if checkTripleAndTwoVoid(row, i, player): return 4*SCORE
-        if countPlayer == 3 and countVoid == 1: score = max(score, 3*SCORE)
-        if countPlayer == 2 and countVoid == 2: score = max(score, 2*SCORE)
+
+    countPlayer = row.count(player)
+    countVoid = row.count(VOID)
+
+    if countPlayer == 4: score += 100
+    elif countPlayer == 3 and countVoid == 1: score +=10
+    elif countPlayer == 2 and countVoid == 2:  score +=5
+
+    countPlayer = row.count(playerEnemy)
+    if countPlayer == 4: score -= 98
+    elif countPlayer == 3 and countVoid == 1: score -=8
+    elif countPlayer == 2 and countVoid == 2:  score -=4
+
     return score
 
 def boardScore(board, player, nb_win_case: int = 4):
     if nb_win_case > len(board):
-        nb_win_case = len(board)
-    
-    multiplier = 1 if player == COMP else -1
+        nb_win_case = len(board) 
 
     score = 0
-    
-    # SCORE 250 PERFECT
-    for i in range(0, len(board)):
-        score = max(score, getScoreOfRow(board[i], player))
-        if score == 5*SCORE: return 5*SCORE*multiplier
-    
-    columns = np.array(board).transpose()
-    for i in range(0, len(columns)):
-        score = max(score, getScoreOfRow(columns[i], player))
-        if score == 5*SCORE: return 5*SCORE*multiplier
-    
+    # Horizontal Score
+    for r in range(0, len(board)):
+        row = board[r]
+        score += checkTripleAndTwoVoid(row, player)
+        for c in range(len(row)-3):
+            window = row[c:c+4]
+            score += getScoreOfRow(window, player)
+    # Vertical Score
+    columns = np.array(board).transpose().tolist()
+    for r in range(0, len(columns)):
+        col = columns[r]
+        score += checkTripleAndTwoVoid(col, player)
+        for c in range(len(col)-3):
+            window = col[c:c+4]
+            score += getScoreOfRow(window, player)
+    # Diagonal Score
     diags = getDiagonalsOfBoard(board)
-    for i in range(0, len(diags)):
-        score = max(score, getScoreOfRow(diags[i], player))
-        if score == 5*SCORE: return 5*SCORE*multiplier
+    for r in range(0, len(diags)):
+        diag = diags[r]
+        score += checkTripleAndTwoVoid(diag, player)
+        for c in range(len(diag)-3):
+            window = diag[c:c+4]
+            score += getScoreOfRow(window, player)
     
-    return score*multiplier
+    return score
+
 
 
 def wins(board, player, nb_win_case: int = 4):
@@ -140,6 +154,9 @@ def wins(board, player, nb_win_case: int = 4):
 
     return False
 
+def isTerminalNode(board):
+    return wins(board, COMP) or wins(board, HUMAN) or len(empty_cells(board)) == 0
+
 # b, len(empty_cells(b)), 
 def minimaxWithAB(board, isMax, depth, alpha = -inf, beta = inf):
     alpha_org = alpha
@@ -155,15 +172,22 @@ def minimaxWithAB(board, isMax, depth, alpha = -inf, beta = inf):
         if tt_entry[1] == 'EXACT':
             return tt_entry[0]
         
-
     best = [None, None, -inf if isMax else inf]
     player = COMP if isMax else HUMAN
-    evaluation = evaluate(board, player)
 
-    if depth == 0 or len(empty_cells(board)) == 0:
-        return [None, None, evaluation]
-    if evaluation == 5*SCORE or evaluation == -5*SCORE or evaluation == -4*SCORE or evaluation == -4*SCORE:
-        return [None, None, evaluation ]
+    isTerminal = isTerminalNode(board)
+
+    if depth == 0 or isTerminal:
+        if isTerminal:
+            if wins(board, COMP):
+                return [None, None, 10000 + depth]
+            elif wins(board, HUMAN):
+                return [None, None, -10000 - depth]
+            else:
+                return [None, None, 0]
+        else:
+            return [None, None, evaluate(board, COMP)]
+
 
     for cell in empty_cells(board):
         x, y = cell[0], cell[1]
