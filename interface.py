@@ -28,7 +28,8 @@ def end_game():
 
 def play(case, tictactoe, string_var):
     if len(tictactoe.empty_cells()) > 0 and not tictactoe.game_over() and tictactoe.turn == HUMAN:
-        tictactoe.human_turn(case)
+        if not tictactoe.human_turn(case) :
+            return None
         cord_x, cord_y = case
         btn_dict[cord_y][cord_x]['text'] = HUMAN
         btn_dict[cord_y][cord_x]['fg'] = "black"
@@ -68,8 +69,16 @@ def create_board(nb_cases, window, tictactoe, string_var):
         btn_dict[cord_y] = {}
         for cord_x in range(nb_cases):
             idx = cord_x * nb_cases + cord_y + 1
-            btn = Button(window, text=idx, width=10, fg='dim gray', bg='white', font=(
-                'Helvetica 15'), height=5, command=lambda case=(cord_x, cord_y): play(case, tictactoe, string_var))
+            btn = Button(
+                window, 
+                text=idx, 
+                width=10, 
+                fg='dim gray', 
+                bg='white', 
+                font=('Helvetica 15'), 
+                height=5, 
+                command=lambda case=(cord_x, cord_y): play(case, tictactoe, string_var)
+            )
             btn.grid(row=cord_x+1, column=cord_y)
             btn_dict[cord_y][cord_x] = btn
 

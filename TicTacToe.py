@@ -203,7 +203,7 @@ class TicTacToe:
     def minimaxWithAB(self, depth, isMax, alpha=-inf, beta=inf):
         alpha_org = alpha
 
-        if str(self.__board) in self.__trans_table:
+        if self.__board_length > 3 and str(self.__board) in self.__trans_table:
             tt_entry = self.__trans_table[str(self.__board)]
             if tt_entry[1] == LOWERCASE:
                 if tt_entry[0][2] >= beta:
@@ -256,7 +256,9 @@ class TicTacToe:
                 if alpha >= beta:
                     break
 
-        self.update_trans_table(alpha, beta, best)
+        if self.__board_length > 3:
+            self.update_trans_table(alpha, beta, best)
+
         return best
 
     def update_trans_table(self, alpha, beta, best):
@@ -286,24 +288,22 @@ class TicTacToe:
 
     def human_turn(self, cord_case):
         remain = self.empty_cells()
+        print(cord_case, remain)
         print("\nYour Turn")
-        if cord_case in remain:
-            x, y = cord_case
-            self.__board[x][y] = HUMAN
-            self.turn = COMP
-        else:
+        if cord_case not in remain:
+            return False
             print("This case is full, try again.")
+        x, y = cord_case
+        self.__board[x][y] = HUMAN
+        self.turn = COMP
         print(self.render())
-
-        # While-else loop, this code below will run after successful loop.
-        # Clean the terminal, and show the current board
-        # clean()
+        return True
 
     def ai_turn(self):
         print("\nAI Turn:")
         start_time = time.time()
         numEmptyCells = len(self.empty_cells())
-        depth = 6 if self.__board_length > 3 else numEmptyCells
+        depth = 4 if self.__board_length > 3 else numEmptyCells
         # the optimal move for computer
         row, col, score = self.minimaxWithAB(min(depth, numEmptyCells), True)
         # print(row, col, score)
